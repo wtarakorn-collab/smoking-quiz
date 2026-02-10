@@ -3,56 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แบบประเมินการติดบุหรี่</title>
+    <title>แบบประเมินการติดบุหรี่ HSI</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
-        .btn { display: block; width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #00b900; border-radius: 5px; cursor: pointer; background: white; }
+        .btn { display: block; width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #00b900; border-radius: 8px; cursor: pointer; background: white; font-size: 16px; transition: 0.3s; }
         .btn:hover { background: #00b900; color: white; }
-        #result-page { display: none; }
+        .quiz-step { display: none; }
+        #q1 { display: block; } /* ให้หน้าแรกแสดงเสมอ */
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div id="quiz-page">
-        <h3>ข้อที่ 1: ตื่นนอนแล้วสูบมวนแรกเมื่อไหร่?</h3>
-        <button class="btn" onclick="check(3)">ภายใน 5 นาที</button>
-        <button class="btn" onclick="check(2)">6-30 นาที</button>
-        <button class="btn" onclick="check(1)">31-60 นาที</button>
-        <button class="btn" onclick="check(0)">มากกว่า 1 ชม.</button>
+    <div id="q1" class="quiz-step">
+        <h3>ข้อที่ 1: ท่านสูบบุหรี่ประเภทใด?</h3>
+        <button class="btn" onclick="nextStep(2)">บุหรี่มวนมีก้นกรอง</button>
+        <button class="btn" onclick="nextStep(2)">บุหรี่ยาเส้น</button>
+        <button class="btn" onclick="nextStep(2)">บุหรี่ไฟฟ้า</button>
     </div>
 
-    <div id="result-page">
-        <h2>ผลคะแนนของคุณคือ</h2>
-        <h1 id="score">0</h1>
-        <p id="msg"></p>
-        <button class="btn" onclick="closeLiff()" style="background: #00b900; color: white;">ปิดหน้าต่าง</button>
+    <div id="q2" class="quiz-step">
+        <h3>ข้อที่ 2: ปกติท่านสูบมวนแรกหลังตื่นนอนเมื่อใด?</h3>
+        <button class="btn" onclick="addScore(3, 3)">ภายใน 5 นาที</button>
+        <button class="btn" onclick="addScore(2, 3)">6 - 30 นาที</button>
+        <button class="btn" onclick="addScore(1, 3)">31 - 60 นาที</button>
+        <button class="btn" onclick="addScore(0, 3)">มากกว่า 60 นาที</button>
+    </div>
+
+    <div id="q3" class="quiz-step">
+        <h3>ข้อที่ 3: ท่านสูบบุหรี่วันละกี่มวน?</h3>
+        <button class="btn" onclick="calculateHSI(0)">1 - 10 มวน</button>
+        <button class="btn" onclick="calculateHSI(1)">11 - 20 มวน</button>
+        <button class="btn" onclick="calculateHSI(2)">21 - 30 มวน</button>
+        <button class="btn" onclick="calculateHSI(3)">31 มวนขึ้นไป</button>
+    </div>
+
+    <div id="result-page" style="display:none;">
+        <h2>ผลคะแนน HSI ของคุณคือ</h2>
+        <h1 id="score" style="font-size: 3.5rem; color: #00b900; margin: 10px 0;">0</h1>
+        <p id="msg" style="font-weight: bold; font-size: 1.2rem;"></p>
+        <p id="desc" style="color: #666; line-height: 1.5;"></p>
+        <button class="btn" onclick="closeLiff()" style="background: #00b900; color: white; margin-top: 20px;">ปิดหน้าต่าง</button>
     </div>
 </div>
 
 <script>
-    let total = 0;
+    let totalScore = 0;
 
+    // เริ่มต้น LIFF
     async function initLiff() {
-        // ขั้นตอนนี้สำคัญ! เราจะกลับมาแก้ ID ทีหลัง
-        await liff.init({ liffId: "2009097787-z2JzoWK9" }); 
-        if (!liff.isLoggedIn()) { liff.login(); }
+        try {
+            await liff.init({ liffId: "2009097787-z2JzoWK9" }); 
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            }
+        } catch (error) {
+            console.error('LIFF Error:', error);
+        }
     }
     initLiff();
 
-    function check(points) {
-        total = points;
-        document.getElementById('quiz-page').style.display = 'none';
+    function nextStep(step) {
+        document.querySelectorAll('.quiz-step').forEach(div => div.style.display = 'none');
+        const nextDiv = document.getElementById('q' + step);
+        if (nextDiv) nextDiv.style.display = 'block';
+    }
+
+    function addScore(points, next) {
+        totalScore += points;
+        nextStep(next);
+    }
+
+    function calculateHSI(points) {
+        totalScore += points;
+        document.querySelectorAll('.quiz-step').forEach(div => div.style.display = 'none');
         document.getElementById('result-page').style.display = 'block';
-        document.getElementById('score').innerText = total;
-        document.getElementById('msg').innerText = total >= 2 ? "คุณมีความเสี่ยงสูง" : "คุณมีความเสี่ยงต่ำ";
+        
+        const scoreEl = document.getElementById('score');
+        const msgEl = document.getElementById('msg');
+        const descEl = document.getElementById('desc');
+        
+        scoreEl.innerText = totalScore;
+
+        if (totalScore <= 2) {
+            msgEl.innerText = "ระดับการติดนิโคติน: ต่ำ (Low)";
+            descEl.innerText = "คุณยังมีความสามารถในการควบคุมการสูบได้ดี แนะนำให้ลองปรับพฤติกรรมเพื่อเลิกขาด";
+        } else if (totalScore <= 4) {
+            msgEl.innerText = "ระดับการติดนิโคติน: ปานกลาง (Medium)";
+            descEl.innerText = "เริ่มมีการติดสารนิโคตินในระดับที่ควรระวัง การปรึกษาผู้เชี่ยวชาญจะช่วยให้เลิกได้ง่ายขึ้น";
+        } else {
+            msgEl.innerText = "ระดับการติดนิโคติน: สูง (High)";
+            descEl.innerText = "คุณมีการติดนิโคตินอย่างรุนแรง แนะนำให้เข้ารับคำปรึกษาเพื่อใช้ยาช่วยเลิกบุหรี่";
+        }
     }
 
     function closeLiff() {
-        liff.sendMessages([{ type: 'text', text: 'ฉันประเมินเสร็จแล้ว ได้คะแนน: ' + total }])
-            .then(() => { liff.closeWindow(); });
+        const message = `ฉันทำแบบประเมิน HSI เสร็จแล้ว\nได้คะแนน: ${totalScore}\nผลประเมิน: ${document.getElementById('msg').innerText}`;
+        
+        liff.sendMessages([{ type: 'text', text: message }])
+            .then(() => {
+                liff.closeWindow();
+            }).catch((err) => {
+                console.error('Error sending message:', err);
+                liff.closeWindow();
+            });
     }
 </script>
 </body>
