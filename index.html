@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบประเมินการติดบุหรี่</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
+        .btn { display: block; width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #00b900; border-radius: 5px; cursor: pointer; background: white; }
+        .btn:hover { background: #00b900; color: white; }
+        #result-page { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div id="quiz-page">
+        <h3>ข้อที่ 1: ตื่นนอนแล้วสูบมวนแรกเมื่อไหร่?</h3>
+        <button class="btn" onclick="check(3)">ภายใน 5 นาที</button>
+        <button class="btn" onclick="check(2)">6-30 นาที</button>
+        <button class="btn" onclick="check(1)">31-60 นาที</button>
+        <button class="btn" onclick="check(0)">มากกว่า 1 ชม.</button>
+    </div>
+
+    <div id="result-page">
+        <h2>ผลคะแนนของคุณคือ</h2>
+        <h1 id="score">0</h1>
+        <p id="msg"></p>
+        <button class="btn" onclick="closeLiff()" style="background: #00b900; color: white;">ปิดหน้าต่าง</button>
+    </div>
+</div>
+
+<script>
+    let total = 0;
+
+    async function initLiff() {
+        // ขั้นตอนนี้สำคัญ! เราจะกลับมาแก้ ID ทีหลัง
+        await liff.init({ liffId: "YOUR_LIFF_ID_HERE" }); 
+        if (!liff.isLoggedIn()) { liff.login(); }
+    }
+    initLiff();
+
+    function check(points) {
+        total = points;
+        document.getElementById('quiz-page').style.display = 'none';
+        document.getElementById('result-page').style.display = 'block';
+        document.getElementById('score').innerText = total;
+        document.getElementById('msg').innerText = total >= 2 ? "คุณมีความเสี่ยงสูง" : "คุณมีความเสี่ยงต่ำ";
+    }
+
+    function closeLiff() {
+        liff.sendMessages([{ type: 'text', text: 'ฉันประเมินเสร็จแล้ว ได้คะแนน: ' + total }])
+            .then(() => { liff.closeWindow(); });
+    }
+</script>
+</body>
+</html>
